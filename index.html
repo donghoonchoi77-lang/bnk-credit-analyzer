@@ -216,7 +216,7 @@ details>summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--navy2)
   </div>
 
   <div class="card" id="conRefCard">
-    <h2>🔁 연결 기준 참고 <span class="badge b-con">참고</span></h2>
+    <h2>🔁 연결 기준 <span class="badge b-con">참고</span></h2>
     <div id="conRefBody"></div>
   </div>
 </section>
@@ -821,8 +821,10 @@ function renderQ3(){
       (q.ie_est!=null?(' (연환산 영업이익 '+nf(q.op_ann)+'억 ÷ 이자비용 추정 '+nf(q.ie_est)+'억)'):'')+
       ' → C1 2026년 '+(q.c1_2026?'<span class="neg">충족</span>':'미충족')+'</div>';
     if(q.note) h += '<div class="warnbox" style="margin-top:6px">'+esc(q.note)+'</div>';
+  } else if(c.q3_note){
+    h += '<div class="warnbox">'+esc(c.q3_note)+'</div>';
   } else {
-    h += '<div class="warnbox">'+esc(c.q3_note||"2026.3Q 별도 실적 미공시")+'</div>';
+    h += '<div class="hint">이 기업의 2026.3Q 별도 실적은 앱에 내장되어 있지 않습니다(심사의견서·공시 원문 참조).</div>';
   }
   if(c.credit && c.credit.rating) h += '<div class="hint" style="margin-top:8px">신용등급: '+esc(c.credit.rating)+'</div>';
   if(c.credit && c.credit.contingent) h += '<div class="hint" style="margin-top:4px">우발채무: '+esc(c.credit.contingent)+'</div>';
