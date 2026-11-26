@@ -697,10 +697,12 @@ function selectCompany(name, opts){
     applySample(state, n);
   } else {
     const g=groupOf(name);
+    const hit=(g?null:INDEX.filter(function(e){ return normName(e.name)===normName(name); })[0])||null;
     state.company={
       name:name,
-      group: g ? g.n : (state.company.group||""),
-      kind: (g && g.t==="주채무계열(비지주)") ? "비지주계열" : (state.company.kind||""),
+      group: g ? g.n : (hit ? hit.group : ""),
+      kind: (g && g.t==="주채무계열(비지주)") ? "비지주계열"
+            : (g ? "자회사" : (hit && hit.level==="소속기업체" ? "비지주계열" : "")),
       code:"", market:""
     };
     state.fin={sep:{},con:{}};
@@ -1210,7 +1212,9 @@ $("#gradeManual").onchange=e=>{ state.gradeManual=e.target.value; save(); render
 /* ================= AI 탭 ================= */
 function basisLine(){
   const j=judge(state.fin.sep||{}), jc=judge(state.fin.con||{});
-  return "별도(개별) 기준 판정: "+j.verdict+" (충족 "+(j.trig.join(",")||"없음")+") / 연결 참고: "+jc.verdict;
+  const a = hasFinData(state.fin.sep) ? ("별도(개별) 기준 판정: "+j.verdict+" (충족 "+(j.trig.join(",")||"없음")+")") : "별도(개별) 기준 판정: 재무 미입력";
+  const b = hasFinData(state.fin.con) ? ("연결 참고: "+jc.verdict) : "연결 참고: 미입력";
+  return a+" / "+b;
 }
 function finLine(){
   const fin=state.fin.sep||{};
