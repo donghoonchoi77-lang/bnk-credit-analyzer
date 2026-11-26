@@ -1135,7 +1135,11 @@ function scoreNow(){
   const r25=ratioRow(fin,"2025");
   let s=0; const why=[];
   const vmap={"정상":30,"관찰":20,"요주의":10,"Stage 2 대상":0};
-  s+=vmap[j.verdict]??10; why.push("Stage 2(별도) "+j.verdict+" +"+(vmap[j.verdict]??10));
+  if(hasFinData(fin)){
+    s+=vmap[j.verdict]??10; why.push("Stage 2(별도) "+j.verdict+" +"+(vmap[j.verdict]??10));
+  } else {
+    why.push("Stage 2(별도) 재무 미입력 +0");
+  }
   const ic=r25.icr;
   if(ic!=null){
     const p = ic>=2?20: ic>=1?12: ic>=0.5?5:0;
@@ -1190,7 +1194,7 @@ function renderScore(){
     ];
   $("#productBox").innerHTML = '<ul style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.7">'+
     base.map(x=>'<li>'+x+'</li>').join("")+'</ul>'+
-    '<div class="hint" style="margin-top:8px">별도 기준 판정: <b>'+sepV+'</b> · 이자보상 '+nf(r25.icr,2)+'배 · 부채비율 '+pct(r25.debt_ratio)+'</div>';
+    '<div class="hint" style="margin-top:8px">별도 기준 판정: <b>'+(hasFinData(state.fin.sep)?sepV:"미입력")+'</b> · 이자보상 '+nf(r25.icr,2)+'배 · 부채비율 '+pct(r25.debt_ratio)+'</div>';
 
   const nm=encodeURIComponent(state.company.name);
   const code=state.company.code||"";
