@@ -902,8 +902,8 @@ function renderVerdict(){
   const sc = SAMPLES.companies[sampleOf(state.company.name)];
   const conMissing = !!(sc && sc.con_missing);
   if(!hasFinData(state.fin.sep) && !hasFinData(state.fin.con)){
-    $("#verdictBox").innerHTML = '<div class="hint">ℹ️ <b>'+esc(state.company.name)+'</b>의 재무 데이터가 아직 없습니다. '+
-      (sc ? '아래 표에 직접 입력하거나 <b>별도 샘플 채우기</b>를 누르세요.' : '계보 정보만 표시 중입니다 — 피클에게 재무·금리 분석을 요청하면 DART 공시 기반으로 채워집니다.')+'</div>';
+    $("#verdictBox").innerHTML = '<div class="kpi"><div class="box"><div class="k">분석 기업</div><div class="v" style="font-size:14px">'+esc(state.company.name)+'</div></div>'+
+      '<div class="box"><div class="k">Stage 2 (별도)</div><div class="v" style="font-size:14px">재무 미입력</div></div></div>';
     return;
   }
   $("#verdictBox").innerHTML =
@@ -1009,7 +1009,7 @@ function renderConRef(){
   const con=state.fin.con||{};
   const j=judge(con);
   const sc = SAMPLES.companies[sampleOf(state.company.name)];
-  if((sc && sc.con_missing) || !Object.keys(con).length){
+  if((sc && sc.con_missing) || !hasFinData(con)){
     $("#conRefBody").innerHTML = '<div class="hint">연결재무제표가 공시되지 않은 차주입니다(비상장·별도만 공시). '+
       '연결 기준은 참고용이므로 별도 지표로 판단하세요.</div>';
     return;
