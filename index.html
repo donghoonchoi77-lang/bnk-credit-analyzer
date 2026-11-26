@@ -481,6 +481,16 @@ Object.keys((SAMPLES.meta && SAMPLES.meta.alias) || {}).forEach(a=>{
   if(SAMPLES.companies[t]) SAMPLE_NORM[normName(a)] = t;
 });
 function sampleOf(name){ return SAMPLE_NORM[normName(name)] || (SAMPLES.companies[name] ? name : null); }
+/* 저장된 상태가 재무 미입력인데 내장 데이터가 생긴 기업이면 샘플을 채워 준다(빈 값만) */
+(function restoreSample(){
+  try{
+    const f = state.fin || {};
+    if(!hasFinData(f.sep) && !hasFinData(f.con)){
+      const n = sampleOf((state.company||{}).name);
+      if(n){ applySample(state, n); save(); }
+    }
+  }catch(e){}
+})();
 function finBadge(name){ return sampleOf(name) ? '<span class="tag fin">📊 재무보유</span>' : ''; }
 
 function searchGen(q){
