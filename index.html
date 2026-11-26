@@ -1093,7 +1093,8 @@ function renderLoans(){
   const bnkAvg=(state.rates.loans||[]).reduce((a,r)=>{
     const b=num(r.bnk); return b==null? a : a+(b*(num(r.bal)||0));
   },0);
-  const bnkWa = tot? bnkAvg/tot : null;
+  const anyBnk=(state.rates.loans||[]).some(r=>num(r.bnk)!=null);
+  const bnkWa = (tot&&anyBnk)? bnkAvg/tot : null;
   const m = (wa!=null&&bnkWa!=null)?Math.round((wa-bnkWa)*100):null;
   const note = (RATES[state.company.name]||{}).note;
   $("#loanSummary").innerHTML = (note?'<div class="hint" style="margin-bottom:8px">ℹ️ '+esc(note)+'</div>':'') + (tot? (
