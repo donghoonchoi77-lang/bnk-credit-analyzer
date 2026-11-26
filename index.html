@@ -518,7 +518,7 @@ function renderTree(g){
     html += '<details style="margin-top:10px"><summary>📋 금감원 주채무계열 소속기업체 '+g.js.length+'사 (\u201926.9월말, 지분율 미표기)</summary><ul style="margin-top:6px">';
     g.js.forEach(nm=>{
       const sn=sampleOf(nm);
-      html += '<li><span class="nm" data-pick="'+esc(nm)+'" style="cursor:pointer">'+esc(nm)+'</span>'+(sn?' <span class="pc" data-open="'+esc(sn)+'">📊 재무</span>':'')+'</li>';
+      html += '<li data-pick="'+esc(nm)+'" style="cursor:pointer;padding:4px 0"><span class="nm">'+esc(nm)+'</span>'+(sn?' <span class="pc" data-open="'+esc(sn)+'">📊 재무</span>':'')+'</li>';
     });
     html += '</ul></details>';
   }
@@ -529,7 +529,7 @@ function renderTree(g){
 function treeNode(node, pct, depth, parentEff){
   // parentEff: 상위 단계의 유효지분율(%). 루트 자회사는 null → 100% 기준
   const eff = (pct!=null) ? ((parentEff!=null?parentEff:100) * pct/100) : null;
-  let h = '<li><span class="nm" data-pick="'+esc(node.n)+'" style="cursor:pointer">'+esc(node.n)+'</span>';
+  let h = '<li data-pick="'+esc(node.n)+'" style="cursor:pointer;padding:4px 0"><span class="nm">'+esc(node.n)+'</span>';
   if(pct!=null) h += '<span class="pc">'+nf(pct,2)+'%</span>';
   if(depth>1 && eff!=null) h += '<span class="eff">유효 '+nf(eff,2)+'%</span>';
   if(node.s && node.s.length){
