@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="BNK 여신분석">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b2d5b"/><stop offset="1" stop-color="#1f6fd0"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="22" fill="url(#g)"/>
+  <g fill="#fff">
+    <path d="M50 23.5 L78 35 L22 35 Z"/>
+    <rect x="20" y="37.2" width="60" height="3"/>
+    <rect x="26" y="43" width="7.5" height="20"/>
+    <rect x="39" y="43" width="7.5" height="20"/>
+    <rect x="52" y="43" width="7.5" height="20"/>
+    <rect x="65" y="43" width="7.5" height="20"/>
+    <rect x="22" y="64.5" width="56" height="3.6"/>
+  </g>
+  <text x="50" y="82" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif"
+        font-size="15" font-weight="700" fill="#fff">BNK</text>
+</svg>
