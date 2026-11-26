@@ -1323,6 +1323,7 @@ function renderFin(refreshTable=true){
   renderRatios();
   renderConRef();
   $("#coName").value = state.company.name;
+  const bs=document.querySelector("#basisSel"); if(bs) bs.value = state.basis || "sep";
 }
 function renderAll(){
   renderFin(true);
