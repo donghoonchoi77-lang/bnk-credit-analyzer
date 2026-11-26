@@ -723,7 +723,7 @@ function renderQHits(q){
     }).join("");
   }
   if(!hits.length && !finHits.length){
-    html = '<div class="hint">일치하는 계열·기업이 없습니다. <br>· 신세계·삼성·현대차처럼 <b>비지주 계열</b>은 금감원 지주회사 계보에 없지만 아래 추천 목록·재무 탭에서 바로 조회됩니다.<br>· 계보에 없는 기업은 아래 <b>직접 분석</b>으로 등록할 수 있습니다.</div>'+
+    html = '<div class="hint">일치하는 계열·기업이 없습니다. <br>· 신세계·삼성·현대차처럼 <b>비지주 계열</b>은 금감원 지주회사 계보에 없지만 <b>주채무계열(2026년 42개)</b>로 등록되어 검색·재무 조회됩니다.<br>· 계보에 없는 기업은 아래 <b>직접 분석</b>으로 등록할 수 있습니다.<br>· 2026년 주채무계열 명단에 없는 그룹: 이랜드·애경·유진(2026년 제외), SM·금호아시아나(2025년 제외)</div>'+
       '<div class="hint" style="margin-top:8px">비슷한 이름: '+acSuggest(q,6).map(e=>'<b>'+esc(e.name)+'</b>').join(" · ")+'</div>';
   }
   out.innerHTML=html;
