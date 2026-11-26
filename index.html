@@ -193,7 +193,7 @@ details>summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--navy2)
   </div>
 
   <div class="card">
-    <h2>🧮 6개 기준 판정 (별도 기준)</h2>
+    <h2>🧮 6개 기준 판정 (<span id="checkBasis">별도</span> 기준)</h2>
     <div class="scroll"><table class="tight" id="checkTable"></table></div>
     <div class="hint" style="margin-top:8px">
       C1 3년 연속 이자보상배율&lt;1(또는 영업손실) · C2 3년 연속 영업활동현금흐름&lt;0 · C3 3년 연속 이자지급후 현금흐름&lt;0 ·
@@ -949,6 +949,7 @@ function renderChecks(){
   }
   h+='</tbody>';
   $("#checkTable").innerHTML=h;
+  const cb=document.querySelector("#checkBasis"); if(cb) cb.textContent = (state.basis==="sep" ? "별도" : "연결");
 }
 
 function renderFinTable(){
