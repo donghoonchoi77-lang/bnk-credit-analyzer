@@ -377,6 +377,7 @@ function applySample(s, name){
   const c = SAMPLES.companies[name];
   if(!c) return;
   s.company = {name, group:c.group, kind:c.kind, code:c.code, market:c.market};
+  s.basis = "sep";
   s.fin = {sep: JSON.parse(JSON.stringify(c.sep)), con: JSON.parse(JSON.stringify(c.con))};
   const r = RATES[name] || {loans:[],bonds:[]};
   s.rates = JSON.parse(JSON.stringify(r));
@@ -705,6 +706,7 @@ function selectCompany(name, opts){
     state.fin={sep:{},con:{}};
     YEARS.forEach(y=>{ state.fin.sep[y]={}; state.fin.con[y]={}; });
     state.rates={loans:[],bonds:[]};
+    state.basis="sep";
     state.news=[];
     state.triggers=JSON.parse(JSON.stringify(EMPTY_TRIGGERS));
     state.gradeManual="";
@@ -828,6 +830,7 @@ function initFin(){
     if(sel.value==="__cur"){ return; }
     selectCompany(sel.value, {stay:true});
   };
+  $("#basisSel").value = state.basis || "sep";
   $("#basisSel").onchange=e=>{ state.basis=e.target.value; save(); renderAll(); };
   $("#coName").oninput=e=>{ state.company.name=e.target.value; save(); renderQ3(); };
   $("#coName").value = state.company.name;
