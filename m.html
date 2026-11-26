@@ -13,8 +13,11 @@
 </head>
 <body>
   <div class="dev">
-    <div class="cap">iPhone 390×844 — BNK 기업·여신분석</div>
-    <iframe id="f" src="./index.html?m=1" width="390" height="844" title="app"></iframe>
+    <div class="cap">iPhone 390×844 — BNK 기업·여신분석 (캐시 무효화 로드)</div>
+    <iframe id="f" src="about:blank" width="390" height="844" title="app"></iframe>
   </div>
+  <script>
+    document.getElementById('f').src = './index.html?v=' + Date.now();
+  </script>
 </body>
 </html>

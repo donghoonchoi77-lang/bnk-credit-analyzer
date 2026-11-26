@@ -901,7 +901,7 @@ function renderVerdict(){
   const isSep = state.basis==="sep";
   const sc = SAMPLES.companies[sampleOf(state.company.name)];
   const conMissing = !!(sc && sc.con_missing);
-  if(!hasFinData(state.fin.sep) && !hasFinData(state.fin.con)){
+  if(!hasFinData(fin)){
     $("#verdictBox").innerHTML = '<div class="kpi"><div class="box"><div class="k">분석 기업</div><div class="v" style="font-size:14px">'+esc(state.company.name)+'</div></div>'+
       '<div class="box"><div class="k">Stage 2 (별도)</div><div class="v" style="font-size:14px">재무 미입력</div></div></div>';
     return;
@@ -1010,8 +1010,11 @@ function renderConRef(){
   const j=judge(con);
   const sc = SAMPLES.companies[sampleOf(state.company.name)];
   if((sc && sc.con_missing) || !hasFinData(con)){
-    $("#conRefBody").innerHTML = '<div class="hint">연결재무제표가 공시되지 않은 차주입니다(비상장·별도만 공시). '+
-      '연결 기준은 참고용이므로 별도 지표로 판단하세요.</div>';
+    $("#conRefBody").innerHTML = '<div class="hint">'+
+      (sc && sc.con_missing
+        ? '연결재무제표가 공시되지 않은 차주입니다(비상장·별도만 공시). 연결 기준은 참고용이므로 별도 지표로 판단하세요.'
+        : '연결 데이터가 입력되지 않았습니다. <b>연결 샘플 채우기</b> 또는 직접 입력으로 채울 수 있습니다.')+
+      '</div>';
     return;
   }
   let rows=FIN_FIELDS.slice(0,6).map(([k,label])=>{
