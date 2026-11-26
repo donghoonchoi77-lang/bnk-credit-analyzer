@@ -184,6 +184,7 @@ details>summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--navy2)
       <div class="grow ac"><label class="lbl">기업명(직접 입력)</label><input type="text" id="coName" autocomplete="off"><div class="acList" id="coNameAc"></div></div>
     </div>
     <div id="verdictBox" style="margin-top:12px"></div>
+    <div id="coNotice" style="margin-top:10px"></div>
   </div>
 
   <div class="card" id="q3Card">
@@ -223,6 +224,15 @@ details>summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--navy2)
 
 <!-- ───────────── 3. 금리 ───────────── -->
 <section class="tab" id="tab-rate">
+  <div class="card">
+    <h2>🏢 분석 기업</h2>
+    <div class="row">
+      <div class="grow"><label class="lbl">현재 기업</label><select id="coSelRate"></select></div>
+    </div>
+    <div class="hint" style="margin-top:6px">여기서 바꾸면 재무·Stage2·금리·섭외 화면이 모두 그 기업으로 바뀝니다.</div>
+    <div id="coNoticeRate" style="margin-top:8px"></div>
+  </div>
+
   <div class="card">
     <h2>💸 여신종류별 금리 비교</h2>
     <div class="hint">공시 주석의 차입처별 금리와 잔액을 입력하면, <b>BNK 제시금리 대비 메리트(bps)</b>가 자동 계산됩니다. (절감 = 기존 평균금리 − BNK 제시금리)</div>
@@ -507,7 +517,7 @@ function renderTree(g){
     html += '<details style="margin-top:10px"><summary>📋 금감원 주채무계열 소속기업체 '+g.js.length+'사 (\u201926.9월말, 지분율 미표기)</summary><ul style="margin-top:6px">';
     g.js.forEach(nm=>{
       const sn=sampleOf(nm);
-      html += '<li><span class="nm">'+esc(nm)+'</span>'+(sn?' <span class="pc" data-open="'+esc(sn)+'">📊 재무</span>':'')+'</li>';
+      html += '<li><span class="nm" data-pick="'+esc(nm)+'" style="cursor:pointer">'+esc(nm)+'</span>'+(sn?' <span class="pc" data-open="'+esc(sn)+'">📊 재무</span>':'')+'</li>';
     });
     html += '</ul></details>';
   }
@@ -518,7 +528,7 @@ function renderTree(g){
 function treeNode(node, pct, depth, parentEff){
   // parentEff: 상위 단계의 유효지분율(%). 루트 자회사는 null → 100% 기준
   const eff = (pct!=null) ? ((parentEff!=null?parentEff:100) * pct/100) : null;
-  let h = '<li><span class="nm">'+esc(node.n)+'</span>';
+  let h = '<li><span class="nm" data-pick="'+esc(node.n)+'" style="cursor:pointer">'+esc(node.n)+'</span>';
   if(pct!=null) h += '<span class="pc">'+nf(pct,2)+'%</span>';
   if(depth>1 && eff!=null) h += '<span class="eff">유효 '+nf(eff,2)+'%</span>';
   if(node.s && node.s.length){
@@ -672,19 +682,42 @@ function acAttach(input, listId, onPick){
 }
 
 /* 재무·Stage2 탭으로 기업 바로 열기 */
-function openCompany(name){
-  const n = sampleOf(name);
+const EMPTY_TRIGGERS={capex:false,funding:false,mna:false,order:false,refin:false,newbiz:false};
+function syncCoSelectors(){
+  const n=sampleOf(state.company.name);
+  ["#coSel","#coSelRate"].forEach(s=>{ const el=document.querySelector(s); if(el) el.value = n||"__cur"; });
+}
+/* 계보·검색·자동선택에서 기업을 고를 때: state 전체를 그 기업으로 교체 */
+function selectCompany(name, opts){
+  opts=opts||{};
+  if(!name) return;
+  const n=sampleOf(name);
   if(n){
     applySample(state, n);
-    save();
-    const sel=document.querySelector("#coSel"); if(sel) sel.value=n;
-    renderAll();
   } else {
-    state.company={name:name, group:state.company.group||"", kind:state.company.kind||"비지주계열", code:"", market:""};
-    save(); renderFin();
+    const g=groupOf(name);
+    state.company={
+      name:name,
+      group: g ? g.n : (state.company.group||""),
+      kind: (g && g.t==="주채무계열(비지주)") ? "비지주계열" : (state.company.kind||""),
+      code:"", market:""
+    };
+    state.fin={sep:{},con:{}};
+    YEARS.forEach(y=>{ state.fin.sep[y]={}; state.fin.con[y]={}; });
+    state.rates={loans:[],bonds:[]};
+    state.news=[];
+    state.triggers=JSON.parse(JSON.stringify(EMPTY_TRIGGERS));
+    state.gradeManual="";
   }
-  switchTab("fin");
-  window.scrollTo({top:0,behavior:"instant"});
+  save(); syncCoSelectors(); renderAll();
+  if(!opts.stay){ switchTab("fin"); window.scrollTo({top:0,behavior:"instant"}); }
+}
+function openCompany(name){ selectCompany(name, {stay:false}); }
+function renderNotice(){
+  const name=state.company.name||"";
+  const isSample=!!sampleOf(name);
+  const html = isSample ? "" : '<div class="warnbox">ℹ️ <b>'+esc(name)+'</b>은(는) 계보 정보만 내장되어 있습니다. 피클 채팅방에 <b>“'+esc(name)+' 재무·금리 분석해줘”</b>라고 말씀하시면 DART 공시 기반으로 채워 드립니다.</div>';
+  ["#coNotice","#coNoticeRate"].forEach(s=>{ const el=document.querySelector(s); if(el) el.innerHTML=html; });
 }
 function finOpenBtn(name){
   const n=sampleOf(name);
@@ -717,7 +750,7 @@ function renderQHits(q){
   if(hits.length){
     html += hits.map(h=>{
       const sn=sampleOf(h.name);
-      return '<div class="res" data-g="'+esc(h.group)+'"><div class="t">'+esc(h.name)+' <span class="badge b-na">'+esc(h.level)+"</span>"+
+      return '<div class="res" data-g="'+esc(h.group)+'" data-n="'+esc(h.name)+'"><div class="t">'+esc(h.name)+' <span class="badge b-na">'+esc(h.level)+"</span>"+
         (sn?' <span class="badge b-sep" data-open="'+esc(sn)+'">📊 재무</span>':'')+'</div>'+
         '<div class="m">'+esc(h.path.join(" → "))+'</div></div>';
     }).join("");
@@ -729,6 +762,8 @@ function renderQHits(q){
   out.innerHTML=html;
   out.querySelectorAll("[data-open]").forEach(el=>{ el.onclick=(ev)=>{ ev.stopPropagation(); openCompany(el.getAttribute("data-open")); }; });
   out.querySelectorAll(".res").forEach(el=>el.onclick=()=>{
+    const nm=el.getAttribute("data-n");
+    if(nm) selectCompany(nm, {stay:true});
     const g=groupOf(el.dataset.g);
     if(g){ tree.innerHTML=renderTree(g); bindTree(tree); tree.scrollIntoView({behavior:"smooth",block:"start"}); }
   });
@@ -738,12 +773,14 @@ function renderQHits(q){
 }
 function bindTree(tree){
   tree.querySelectorAll("[data-open]").forEach(el=>{ el.onclick=(ev)=>{ ev.stopPropagation(); openCompany(el.getAttribute("data-open")); }; });
+  tree.querySelectorAll("[data-pick]").forEach(el=>{ el.onclick=(ev)=>{ ev.stopPropagation(); selectCompany(el.getAttribute("data-pick"), {stay:true}); }; });
 }
 
 $("#q").addEventListener("input", e=>{ renderQHits(e.target.value); });
 acAttach($("#q"), "qAc", (e)=>{
   $("#q").value = e.name;
   renderQHits(e.name);
+  selectCompany(e.name, {stay:true});
 });
 $("#qClear").onclick=()=>{ $("#q").value=""; $("#genResults").innerHTML=""; $("#genTree").innerHTML=""; };
 
@@ -759,7 +796,7 @@ acAttach($("#mName"), "mNameAc", (e)=>{
   $("#mName").value = e.name;
   if(e.group) $("#mGroup").value = e.group;
   const sn=sampleOf(e.name);
-  if(sn) openCompany(sn);
+  if(sn) openCompany(sn); else selectCompany(e.name, {stay:true});
 });
 function switchTab(t){ document.querySelector('#tabs button[data-tab="'+t+'"]').click(); }
 
@@ -773,8 +810,7 @@ const FIN_FIELDS=[
   ["long_term_borrowings","장기차입금"],["depreciation","감가상각비"],["capex","CAPEX"]
 ];
 
-function initFin(){
-  const sel=$("#coSel");
+function fillCompanySelect(sel){
   const byGroup={};
   Object.keys(SAMPLES.companies).forEach(n=>{
     const g=SAMPLES.companies[n].group||"기타";
@@ -784,9 +820,13 @@ function initFin(){
     '<optgroup label="'+esc(g)+'">'+byGroup[g].map(n=>'<option>'+esc(n)+'</option>').join("")+'</optgroup>'
   ).join("") + '<option value="__cur">현재 기업(직접 입력)</option>';
   sel.value = SAMPLES.companies[state.company.name] ? state.company.name : "__cur";
+}
+function initFin(){
+  const sel=$("#coSel");
+  fillCompanySelect(sel);
   sel.onchange=()=>{
     if(sel.value==="__cur"){ return; }
-    applySample(state, sel.value); save(); renderAll();
+    selectCompany(sel.value, {stay:true});
   };
   $("#basisSel").onchange=e=>{ state.basis=e.target.value; save(); renderAll(); };
   $("#coName").oninput=e=>{ state.company.name=e.target.value; save(); renderQ3(); };
@@ -795,6 +835,17 @@ function initFin(){
   $("#fillCon").onclick=()=>{ const n=sampleOf(state.company.name); const c=n&&SAMPLES.companies[n]; if(c){ state.fin.con=JSON.parse(JSON.stringify(c.con)); save(); renderAll(); } };
   $("#fillClear").onclick=()=>{ const k=state.basis; state.fin[k]={}; YEARS.forEach(y=>state.fin[k][y]={}); save(); renderAll(); };
   acAttach($("#coName"), "coNameAc", (e)=>{ openCompany(e.name); });
+}
+
+/* ================= 금리 탭: 현재 기업 표시·전환 ================= */
+function initRate(){
+  const sel=$("#coSelRate");
+  if(!sel) return;
+  fillCompanySelect(sel);
+  sel.onchange=()=>{
+    if(sel.value==="__cur"){ return; }
+    selectCompany(sel.value, {stay:true});
+  };
 }
 
 /* ================= 2026.3Q 동향 ================= */
@@ -839,6 +890,9 @@ function verdictBadge(v){
   return '<span class="badge b-ok">'+v+'</span>';
 }
 
+function hasFinData(fin){
+  return YEARS.some(function(y){ const r=(fin||{})[y]||{}; return r.revenue!=null || r.operating_income!=null || r.cfo!=null || r.total_assets!=null; });
+}
 function renderVerdict(){
   const fin = state.fin[state.basis]||{};
   const j = judge(fin);
@@ -847,6 +901,11 @@ function renderVerdict(){
   const isSep = state.basis==="sep";
   const sc = SAMPLES.companies[sampleOf(state.company.name)];
   const conMissing = !!(sc && sc.con_missing);
+  if(!hasFinData(state.fin.sep) && !hasFinData(state.fin.con)){
+    $("#verdictBox").innerHTML = '<div class="hint">ℹ️ <b>'+esc(state.company.name)+'</b>의 재무 데이터가 아직 없습니다. '+
+      (sc ? '아래 표에 직접 입력하거나 <b>별도 샘플 채우기</b>를 누르세요.' : '계보 정보만 표시 중입니다 — 피클에게 재무·금리 분석을 요청하면 DART 공시 기반으로 채워집니다.')+'</div>';
+    return;
+  }
   $("#verdictBox").innerHTML =
     '<div class="row" style="align-items:flex-start">'+
       '<div class="grow"><div class="lbl">'+(isSep?'별도(개별) — 1차 판정':'연결 — 참고')+'</div>'+
@@ -979,6 +1038,7 @@ function meritBps(row){
   return Math.round((a-b)*100);
 }
 function renderLoans(){
+  renderNotice();
   const t=$("#loanTable");
   let h='<thead><tr><th>여신종류</th><th>최저%</th><th>최고%</th><th>잔액(억)</th><th>BNK 제시%</th><th>메리트(bps)</th><th></th></tr></thead><tbody>';
   (state.rates.loans||[]).forEach((r,i)=>{
@@ -992,7 +1052,7 @@ function renderLoans(){
       '<td class="'+(m>0?"pos":(m<0?"neg":""))+'">'+(m==null?"-":(m>0?"+":"")+m)+'</td>'+
       '<td><button class="ghost sm" data-del="'+i+'">✕</button></td></tr>';
   });
-  if(!(state.rates.loans||[]).length) h+='<tr><td colspan="7" class="hint">샘플 금리를 불러오거나 여신종류를 추가하세요.</td></tr>';
+  if(!(state.rates.loans||[]).length) h+='<tr><td colspan="7" class="hint">차입처별 금리 주석 미입력 — 피클에게 <b>“'+esc(state.company.name)+' 금리 주석 뽑아줘”</b> 요청 또는 아래 <b>+ 여신종류 추가</b>로 입력하세요.</td></tr>';
   t.innerHTML=h+'</tbody>';
   t.querySelectorAll("input").forEach(el=>el.onchange=()=>{
     const i=+el.dataset.i, f=el.dataset.f;
@@ -1031,7 +1091,7 @@ function renderBonds(){
       '<td><input type="number" step="0.01" data-i="'+i+'" data-f="bnk" value="'+(r.bnk??"")+'" style="width:70px"></td>'+
       '<td class="'+(m>0?"pos":(m<0?"neg":""))+'">'+(m==null?"-":(m>0?"+":"")+m)+'</td></tr>';
   });
-  if(!(state.rates.bonds||[]).length) h+='<tr><td colspan="5" class="hint">샘플 만기구조를 불러오세요.</td></tr>';
+  if(!(state.rates.bonds||[]).length) h+='<tr><td colspan="5" class="hint">만기구조 미입력 — 피클에게 <b>“'+esc(state.company.name)+' 만기구조 뽑아줘”</b> 요청 또는 <b>샘플 만기구조 불러오기</b>로 입력하세요.</td></tr>';
   t.innerHTML=h+'</tbody>';
   t.querySelectorAll("input").forEach(el=>el.onchange=()=>{
     const i=+el.dataset.i, f=el.dataset.f;
@@ -1244,8 +1304,11 @@ $("#jsonImport").onclick=()=>{
   }catch(e){ $("#jsonMsg").innerHTML='<span class="neg">적용 실패: '+esc(e.message)+'</span>'; }
 };
 
+/* 검증용: 현재 기업의 재무 보유 여부 */
+function _hasFin(){ return hasFinData(state.fin.sep) || hasFinData(state.fin.con); }
 /* ================= 렌더 ================= */
 function renderFin(refreshTable=true){
+  renderNotice();
   renderVerdict();
   renderChecks();
   renderQ3();
@@ -1265,6 +1328,7 @@ function renderAll(){
 /* ================= 시작 ================= */
 initGene();
 initFin();
+initRate();
 renderAll();
 </script>
 </body>
